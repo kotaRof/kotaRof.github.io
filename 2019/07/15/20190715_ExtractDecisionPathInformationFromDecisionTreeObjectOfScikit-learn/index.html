@@ -1,0 +1,535 @@
+
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="prologue">
+    <title>Extract Decision Path Information from Decision Tree Object of Scikit-learn - prologue</title>
+    <meta name="author" content="kotaRof">
+    
+    
+    
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"kotaRof","sameAs":["https://github.com/kotaRof","mailto:kotarof4@gmail.com"]},"articleBody":"日本語はこちら\nBackgroundWhen you carry out the analysis using decision trees from scikit-learn, you would use GraphViz software to visualize their structure.\nHowever, there exists some problems like…\n\nHard to use decision path information as data since its output is .dot text or image\nSometime annoying to install GraphViz\n\nIn order to overcome above problems, I wrote methods to extract decision path information from decision tree object itself and to print out its structure as text.\nRelated posts\nUnderstanding the decision tree structure\nOfficial HP explains how to visualize decision structure as text style. I mainly referred this to understand the details of decision tree object.\n\n\nGraphviz不要の決定木可視化ライブラリdtreepltをつくった\nWritten in Japanese. There exists some trial to visualize its structure as image without using GraphViz.\n\n\ndtreevis: Decision Tree Visualization\nUsing GraphViz, this package tries to upgrade the visualization of decision trees.\n\n\n\nResultStructural information is kept as arrays in the decision tree object and could be extracted as follows(reference).\n12345678910# estimator : decision tree objectestimator = DecisionTreeClassifier(max_leaf_nodes=3, random_state=0)estimator.fit(X_train, y_train)# Using those arrays, we can parse the tree structure:n_nodes = estimator.tree_.node_count # total number of nodes（int）children_left = estimator.tree_.children_left # child node number at the left side of each node（list）children_right = estimator.tree_.children_right # child node number at the right side of each node（list）feature = estimator.tree_.feature # feature column number of each node（list）threshold = estimator.tree_.threshold # feature threshold of each node（list）\n\nUsing these data, you can output its structure as text format.\noutput12345678910111213141516171819&gt;&gt;&gt; from sklearn.datasets import load_iris&gt;&gt;&gt; from sklearn.tree import DecisionTreeClassifier&gt;&gt;&gt; iris = load_iris()&gt;&gt;&gt; dtc = DecisionTreeClassifier(max_depth=5,min_samples_leaf=10)&gt;&gt;&gt; dtc.fit(iris[&apos;data&apos;],iris[&apos;target&apos;])&gt;&gt;&gt; print(visualizeTreeStructure(dtc,feature_names=iris[&apos;feature_names&apos;]))# outputThe binary tree structure has 11 nodes and has the following tree structure:node=0 test node: go to node 1 if petal length (cm) &lt;= 2.449999988079071 else to node 2.\tnode=1 leaf node.\tnode=2 test node: go to node 3 if petal width (cm) &lt;= 1.75 else to node 8.\t\tnode=3 test node: go to node 4 if petal length (cm) &lt;= 4.6499998569488525 else to node 7.\t\t\tnode=4 test node: go to node 5 if petal length (cm) &lt;= 4.450000047683716 else to node 6.\t\t\t\tnode=5 leaf node.\t\t\t\tnode=6 leaf node.\t\t\tnode=7 leaf node.\t\tnode=8 test node: go to node 9 if sepal length (cm) &lt;= 6.25 else to node 10.\t\t\tnode=9 leaf node.\t\t\tnode=10 leaf node.\n\nFurther trial enables us to create dataframe which exhibits summarized feature threshold information of all nodes.\n123456789101112131415161718192021222324252627282930313233343536373839404142434445464748&gt;&gt;&gt; from sklearn.datasets import load_iris&gt;&gt;&gt; from sklearn.tree import DecisionTreeClassifier&gt;&gt;&gt; iris = load_iris()&gt;&gt;&gt; dtc = DecisionTreeClassifier(max_depth=5,min_samples_leaf=10)&gt;&gt;&gt; dtc.fit(iris[&apos;data&apos;],iris[&apos;target&apos;])&gt;&gt;&gt; print(extractDecisionInfo(dtc,iris[&apos;data&apos;],feature_names=iris[&apos;feature_names&apos;]))# output     sepal length (cm) sepal width (cm)  \\node                                      0           (nan, nan)       (nan, nan)   1           (nan, nan)       (nan, nan)   2           (nan, nan)       (nan, nan)   3           (nan, nan)       (nan, nan)   4           (nan, nan)       (nan, nan)   5           (nan, nan)       (nan, nan)   6           (nan, nan)       (nan, nan)   7           (nan, nan)       (nan, nan)   8           (nan, nan)       (nan, nan)   9          (nan, 6.25)       (nan, nan)   10         (6.25, nan)       (nan, nan)                               petal length (cm)           petal width (cm)  \\node                                                                       0                                  (nan, nan)                 (nan, nan)   1                                  (nan, nan)   (nan, 0.800000011920929)   2                                  (nan, nan)   (0.800000011920929, nan)   3                                  (nan, nan)  (0.800000011920929, 1.75)   4                   (nan, 4.6499998569488525)  (0.800000011920929, 1.75)   5                    (nan, 4.450000047683716)  (0.800000011920929, 1.75)   6     (4.450000047683716, 4.6499998569488525)  (0.800000011920929, 1.75)   7                   (4.6499998569488525, nan)  (0.800000011920929, 1.75)   8                                  (nan, nan)                (1.75, nan)   9                                  (nan, nan)                (1.75, nan)   10                                 (nan, nan)                (1.75, nan)         predicted_value                 value  impurity  n_node_samples  node                                                                   0                 NaN  [[50.0, 50.0, 50.0]]  0.666667             150  1                 0.0    [[50.0, 0.0, 0.0]]  0.000000              50  2                 NaN   [[0.0, 50.0, 50.0]]  0.500000             100  3                 NaN    [[0.0, 49.0, 5.0]]  0.168038              54  4                 NaN    [[0.0, 39.0, 1.0]]  0.048750              40  5                 1.0    [[0.0, 29.0, 0.0]]  0.000000              29  6                 1.0    [[0.0, 10.0, 1.0]]  0.165289              11  7                 1.0    [[0.0, 10.0, 4.0]]  0.408163              14  8                 NaN    [[0.0, 1.0, 45.0]]  0.042533              46  9                 2.0    [[0.0, 1.0, 10.0]]  0.165289              11  10                2.0    [[0.0, 0.0, 35.0]]  0.000000              35\n\nAll the source codes are found in GitHub.\n","dateCreated":"2019-07-15T15:09:14+09:00","dateModified":"2019-07-15T15:44:08+09:00","datePublished":"2019-07-15T15:09:14+09:00","description":"","headline":"Extract Decision Path Information from Decision Tree Object of Scikit-learn","image":[],"mainEntityOfPage":{"@type":"WebPage","@id":"https://kotaRof.github.io/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/"},"publisher":{"@type":"Organization","name":"kotaRof","sameAs":["https://github.com/kotaRof","mailto:kotarof4@gmail.com"]},"url":"https://kotaRof.github.io/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/","keywords":"machine learning, python, scikit-learn, decision tree"}</script>
+    <meta name="description" content="日本語はこちら BackgroundWhen you carry out the analysis using decision trees from scikit-learn, you would use GraphViz software to visualize their structure. However, there exists some problems like…  Hard">
+<meta name="keywords" content="machine learning,python,scikit-learn,decision tree">
+<meta property="og:type" content="blog">
+<meta property="og:title" content="Extract Decision Path Information from Decision Tree Object of Scikit-learn">
+<meta property="og:url" content="https://kotaRof.github.io/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/index.html">
+<meta property="og:site_name" content="prologue">
+<meta property="og:description" content="日本語はこちら BackgroundWhen you carry out the analysis using decision trees from scikit-learn, you would use GraphViz software to visualize their structure. However, there exists some problems like…  Hard">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-07-15T06:44:08.392Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Extract Decision Path Information from Decision Tree Object of Scikit-learn">
+<meta name="twitter:description" content="日本語はこちら BackgroundWhen you carry out the analysis using decision trees from scikit-learn, you would use GraphViz software to visualize their structure. However, there exists some problems like…  Hard">
+    
+    
+        
+    
+    
+    
+    
+    
+    <!--STYLES-->
+    <link rel="stylesheet" href="/assets/css/style-xtxcerwj60vy0z9diardu4mxkaonvhsxn1bdnwp24mfmjo2jk0kjnbenvprd.min.css">
+    <!--STYLES END-->
+    
+
+    
+
+    
+        
+    
+</head>
+
+    <body>
+        <div id="blog">
+            <!-- Define author's picture -->
+
+
+    
+
+<header id="header" data-behavior="4">
+    <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+    <div class="header-title">
+        <a
+            class="header-title-link"
+            href="/ "
+            aria-label=""
+        >
+            prologue
+        </a>
+    </div>
+    
+        
+            <a
+                class="header-right-picture "
+                href="#about"
+                aria-label="Open the link: /#about"
+            >
+        
+        
+        </a>
+    
+</header>
+
+            <!-- Define author's picture -->
+
+
+<nav id="sidebar" data-behavior="4">
+    <div class="sidebar-container">
+        
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/ "
+                            
+                            title="Home"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-home" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Home</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/all-categories"
+                            
+                            title="Categories"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-bookmark" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Categories</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link "
+                             href="/all-tags"
+                            
+                            title="Tags"
+                        >
+                    
+                        <i class="sidebar-button-icon fa fa-tags" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Tags</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+            <ul class="sidebar-buttons">
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="https://github.com/kotaRof" target="_blank" rel="noopener" title="GitHub">
+                    
+                        <i class="sidebar-button-icon fab fa-github" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">GitHub</span>
+                    </a>
+            </li>
+            
+                <li class="sidebar-button">
+                    
+                        <a  class="sidebar-button-link " href="mailto:kotarof4@gmail.com" target="_blank" rel="noopener" title="Mail">
+                    
+                        <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
+                        <span class="sidebar-button-desc">Mail</span>
+                    </a>
+            </li>
+            
+        </ul>
+        
+    </div>
+</nav>
+
+            
+            <div id="main" data-behavior="4"
+                 class="
+                        hasCoverMetaIn
+                        ">
+                
+<article class="post">
+    
+    
+        <div class="post-header main-content-wrap text-left">
+    
+        <h1 class="post-title">
+            Extract Decision Path Information from Decision Tree Object of Scikit-learn
+        </h1>
+    
+    
+        <div class="post-meta">
+    <time datetime="2019-07-15T15:09:14+09:00">
+	
+		    Jul 15, 2019
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/coding/">coding</a>, <a class="category-link" href="/categories/coding/data-science/">data science</a>
+
+
+    
+</div>
+
+    
+</div>
+
+    
+    <div class="post-content markdown">
+        <div class="main-content-wrap">
+            <p><a href="https://qiita.com/kotaRof/items/c478a5ae4c2f70148bf4" target="_blank" rel="noopener">日本語はこちら</a></p>
+<h1 id="Background"><a href="#Background" class="headerlink" title="Background"></a>Background</h1><p>When you carry out the analysis using decision trees from scikit-learn, you would use GraphViz software to visualize their structure.</p>
+<p>However, there exists some problems like…</p>
+<ul>
+<li>Hard to use decision path information as data since its output is .dot text or image</li>
+<li>Sometime annoying to install GraphViz</li>
+</ul>
+<p>In order to overcome above problems, I wrote methods to extract decision path information from decision tree object itself and to print out its structure as text.</p>
+<h1 id="Related-posts"><a href="#Related-posts" class="headerlink" title="Related posts"></a>Related posts</h1><ul>
+<li><a href="https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html" target="_blank" rel="noopener">Understanding the decision tree structure</a><ul>
+<li>Official HP explains how to visualize decision structure as text style. I mainly referred this to understand the details of decision tree object.</li>
+</ul>
+</li>
+<li><a href="https://qiita.com/nekoumei/items/7f2209295515c3aa1053" target="_blank" rel="noopener">Graphviz不要の決定木可視化ライブラリdtreepltをつくった</a><ul>
+<li>Written in Japanese. There exists some trial to visualize its structure as image without using GraphViz.</li>
+</ul>
+</li>
+<li><a href="https://github.com/parrt/dtreeviz" target="_blank" rel="noopener">dtreevis: Decision Tree Visualization</a><ul>
+<li>Using GraphViz, this package tries to upgrade the visualization of decision trees.</li>
+</ul>
+</li>
+</ul>
+<h1 id="Result"><a href="#Result" class="headerlink" title="Result"></a>Result</h1><p>Structural information is kept as arrays in the decision tree object and could be extracted as follows(<a href="https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html" target="_blank" rel="noopener">reference</a>).</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"># estimator : decision tree object</span><br><span class="line">estimator = DecisionTreeClassifier(max_leaf_nodes=3, random_state=0)</span><br><span class="line">estimator.fit(X_train, y_train)</span><br><span class="line"></span><br><span class="line"># Using those arrays, we can parse the tree structure:</span><br><span class="line">n_nodes = estimator.tree_.node_count # total number of nodes（int）</span><br><span class="line">children_left = estimator.tree_.children_left # child node number at the left side of each node（list）</span><br><span class="line">children_right = estimator.tree_.children_right # child node number at the right side of each node（list）</span><br><span class="line">feature = estimator.tree_.feature # feature column number of each node（list）</span><br><span class="line">threshold = estimator.tree_.threshold # feature threshold of each node（list）</span><br></pre></td></tr></table></figure>
+
+<p>Using these data, you can output its structure as text format.</p>
+<figure class="highlight plain"><figcaption><span>output</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; from sklearn.datasets import load_iris</span><br><span class="line">&gt;&gt;&gt; from sklearn.tree import DecisionTreeClassifier</span><br><span class="line">&gt;&gt;&gt; iris = load_iris()</span><br><span class="line">&gt;&gt;&gt; dtc = DecisionTreeClassifier(max_depth=5,min_samples_leaf=10)</span><br><span class="line">&gt;&gt;&gt; dtc.fit(iris[&apos;data&apos;],iris[&apos;target&apos;])</span><br><span class="line">&gt;&gt;&gt; print(visualizeTreeStructure(dtc,feature_names=iris[&apos;feature_names&apos;]))</span><br><span class="line"># output</span><br><span class="line">The binary tree structure has 11 nodes and has the following tree structure:</span><br><span class="line">node=0 test node: go to node 1 if petal length (cm) &lt;= 2.449999988079071 else to node 2.</span><br><span class="line">	node=1 leaf node.</span><br><span class="line">	node=2 test node: go to node 3 if petal width (cm) &lt;= 1.75 else to node 8.</span><br><span class="line">		node=3 test node: go to node 4 if petal length (cm) &lt;= 4.6499998569488525 else to node 7.</span><br><span class="line">			node=4 test node: go to node 5 if petal length (cm) &lt;= 4.450000047683716 else to node 6.</span><br><span class="line">				node=5 leaf node.</span><br><span class="line">				node=6 leaf node.</span><br><span class="line">			node=7 leaf node.</span><br><span class="line">		node=8 test node: go to node 9 if sepal length (cm) &lt;= 6.25 else to node 10.</span><br><span class="line">			node=9 leaf node.</span><br><span class="line">			node=10 leaf node.</span><br></pre></td></tr></table></figure>
+
+<p>Further trial enables us to create dataframe which exhibits summarized feature threshold information of all nodes.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; from sklearn.datasets import load_iris</span><br><span class="line">&gt;&gt;&gt; from sklearn.tree import DecisionTreeClassifier</span><br><span class="line">&gt;&gt;&gt; iris = load_iris()</span><br><span class="line">&gt;&gt;&gt; dtc = DecisionTreeClassifier(max_depth=5,min_samples_leaf=10)</span><br><span class="line">&gt;&gt;&gt; dtc.fit(iris[&apos;data&apos;],iris[&apos;target&apos;])</span><br><span class="line">&gt;&gt;&gt; print(extractDecisionInfo(dtc,iris[&apos;data&apos;],feature_names=iris[&apos;feature_names&apos;]))</span><br><span class="line"># output</span><br><span class="line">     sepal length (cm) sepal width (cm)  \</span><br><span class="line">node                                      </span><br><span class="line">0           (nan, nan)       (nan, nan)   </span><br><span class="line">1           (nan, nan)       (nan, nan)   </span><br><span class="line">2           (nan, nan)       (nan, nan)   </span><br><span class="line">3           (nan, nan)       (nan, nan)   </span><br><span class="line">4           (nan, nan)       (nan, nan)   </span><br><span class="line">5           (nan, nan)       (nan, nan)   </span><br><span class="line">6           (nan, nan)       (nan, nan)   </span><br><span class="line">7           (nan, nan)       (nan, nan)   </span><br><span class="line">8           (nan, nan)       (nan, nan)   </span><br><span class="line">9          (nan, 6.25)       (nan, nan)   </span><br><span class="line">10         (6.25, nan)       (nan, nan)   </span><br><span class="line"></span><br><span class="line">                            petal length (cm)           petal width (cm)  \</span><br><span class="line">node                                                                       </span><br><span class="line">0                                  (nan, nan)                 (nan, nan)   </span><br><span class="line">1                                  (nan, nan)   (nan, 0.800000011920929)   </span><br><span class="line">2                                  (nan, nan)   (0.800000011920929, nan)   </span><br><span class="line">3                                  (nan, nan)  (0.800000011920929, 1.75)   </span><br><span class="line">4                   (nan, 4.6499998569488525)  (0.800000011920929, 1.75)   </span><br><span class="line">5                    (nan, 4.450000047683716)  (0.800000011920929, 1.75)   </span><br><span class="line">6     (4.450000047683716, 4.6499998569488525)  (0.800000011920929, 1.75)   </span><br><span class="line">7                   (4.6499998569488525, nan)  (0.800000011920929, 1.75)   </span><br><span class="line">8                                  (nan, nan)                (1.75, nan)   </span><br><span class="line">9                                  (nan, nan)                (1.75, nan)   </span><br><span class="line">10                                 (nan, nan)                (1.75, nan)   </span><br><span class="line"></span><br><span class="line">      predicted_value                 value  impurity  n_node_samples  </span><br><span class="line">node                                                                   </span><br><span class="line">0                 NaN  [[50.0, 50.0, 50.0]]  0.666667             150  </span><br><span class="line">1                 0.0    [[50.0, 0.0, 0.0]]  0.000000              50  </span><br><span class="line">2                 NaN   [[0.0, 50.0, 50.0]]  0.500000             100  </span><br><span class="line">3                 NaN    [[0.0, 49.0, 5.0]]  0.168038              54  </span><br><span class="line">4                 NaN    [[0.0, 39.0, 1.0]]  0.048750              40  </span><br><span class="line">5                 1.0    [[0.0, 29.0, 0.0]]  0.000000              29  </span><br><span class="line">6                 1.0    [[0.0, 10.0, 1.0]]  0.165289              11  </span><br><span class="line">7                 1.0    [[0.0, 10.0, 4.0]]  0.408163              14  </span><br><span class="line">8                 NaN    [[0.0, 1.0, 45.0]]  0.042533              46  </span><br><span class="line">9                 2.0    [[0.0, 1.0, 10.0]]  0.165289              11  </span><br><span class="line">10                2.0    [[0.0, 0.0, 35.0]]  0.000000              35</span><br></pre></td></tr></table></figure>
+
+<p>All the source codes are found in <a href="https://github.com/kotaRof/hackingDecisionTree/blob/master/extractDecisionPathInfo/ipynb/runAll.ipynb" target="_blank" rel="noopener">GitHub</a>.</p>
+
+            
+
+
+        </div>
+    </div>
+    <div id="post-footer" class="post-footer main-content-wrap">
+        
+            <div class="post-footer-tags">
+                <span class="text-color-light text-small">TAGGED IN</span><br/>
+                
+    <a class="tag tag--primary tag--small t-link" href="/tags/decision-tree/">decision tree</a> <a class="tag tag--primary tag--small t-link" href="/tags/machine-learning/">machine learning</a> <a class="tag tag--primary tag--small t-link" href="/tags/python/">python</a> <a class="tag tag--primary tag--small t-link" href="/tags/scikit-learn/">scikit-learn</a>
+
+            </div>
+        
+        
+            <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/07/15/loading/"
+                    data-tooltip="loading"
+                    aria-label="NEXT: loading"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://kotaRof.github.io/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://kotaRof.github.io/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://kotaRof.github.io/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/"
+                    title="Share on Google+"
+                    aria-label="Share on Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+        
+        
+            
+        
+    </div>
+</article>
+
+
+
+                <footer id="footer" class="main-content-wrap">
+    <span class="copyrights">
+        Copyrights &copy; 2019 kotaRof. All Rights Reserved.
+    </span>
+</footer>
+
+            </div>
+            
+                <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+                    <div class="post-actions-wrap">
+    <nav>
+        <ul class="post-actions post-action-nav">
+            <li class="post-action">
+                
+                    <a
+                        class="post-action-btn btn btn--disabled"
+                        aria-hidden="true"
+                    >
+                        
+                        <i class="fa fa-angle-left" aria-hidden="true"></i>
+                        <span class="hide-xs hide-sm text-small icon-ml">PREVIOUS</span>
+                    </a>
+            </li>
+            <li class="post-action">
+                
+                    
+                <a
+                    class="post-action-btn btn btn--default tooltip--top"
+                    href="/2019/07/15/loading/"
+                    data-tooltip="loading"
+                    aria-label="NEXT: loading"
+                >
+                    
+                        <span class="hide-xs hide-sm text-small icon-mr">NEXT</span>
+                        <i class="fa fa-angle-right" aria-hidden="true"></i>
+                    </a>
+            </li>
+        </ul>
+    </nav>
+    <ul class="post-actions post-action-share">
+        <li class="post-action hide-lg hide-md hide-sm">
+            <a
+                class="post-action-btn btn btn--default btn-open-shareoptions"
+                href="#btn-open-shareoptions"
+                aria-label="Share this post"
+            >
+                <i class="fa fa-share-alt" aria-hidden="true"></i>
+            </a>
+        </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://www.facebook.com/sharer/sharer.php?u=https://kotaRof.github.io/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/"
+                    title="Share on Facebook"
+                    aria-label="Share on Facebook"
+                >
+                    <i class="fab fa-facebook" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://twitter.com/intent/tweet?text=https://kotaRof.github.io/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/"
+                    title="Share on Twitter"
+                    aria-label="Share on Twitter"
+                >
+                    <i class="fab fa-twitter" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+            
+            
+            <li class="post-action hide-xs">
+                <a
+                    class="post-action-btn btn btn--default"
+                    target="new" href="https://plus.google.com/share?url=https://kotaRof.github.io/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/"
+                    title="Share on Google+"
+                    aria-label="Share on Google+"
+                >
+                    <i class="fab fa-google-plus" aria-hidden="true"></i>
+                </a>
+            </li>
+        
+        
+            
+        
+        <li class="post-action">
+            
+                <a class="post-action-btn btn btn--default" href="#" aria-label="Back to top">
+            
+                <i class="fa fa-list" aria-hidden="true"></i>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+                </div>
+                
+    <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+        <i id="btn-close-shareoptions" class="fa fa-times"></i>
+        <ul class="share-options">
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://www.facebook.com/sharer/sharer.php?u=https://kotaRof.github.io/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/"
+                        aria-label="Share on Facebook"
+                    >
+                        <i class="fab fa-facebook" aria-hidden="true"></i><span>Share on Facebook</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://twitter.com/intent/tweet?text=https://kotaRof.github.io/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/"
+                        aria-label="Share on Twitter"
+                    >
+                        <i class="fab fa-twitter" aria-hidden="true"></i><span>Share on Twitter</span>
+                    </a>
+                </li>
+            
+                
+                
+                <li class="share-option">
+                    <a
+                        class="share-option-btn"
+                        target="new"
+                        href="https://plus.google.com/share?url=https://kotaRof.github.io/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/"
+                        aria-label="Share on Google+"
+                    >
+                        <i class="fab fa-google-plus" aria-hidden="true"></i><span>Share on Google+</span>
+                    </a>
+                </li>
+            
+        </ul>
+    </div>
+
+
+            
+        </div>
+        
+
+
+<div id="about">
+    <div id="about-card">
+        <div id="about-btn-close">
+            <i class="fa fa-times"></i>
+        </div>
+        
+            <h4 id="about-card-name">kotaRof</h4>
+        
+            <div id="about-card-bio"><p>author.bio</p>
+</div>
+        
+        
+            <div id="about-card-job">
+                <i class="fa fa-briefcase"></i>
+                <br/>
+                <p>author.job</p>
+
+            </div>
+        
+        
+    </div>
+</div>
+
+        
+        
+<div id="cover" style="background-image:url('/assets/images/cover.jpg');"></div>
+        <!--SCRIPTS-->
+<script src="/assets/js/script-clpanarwazq2oyzfv014lipwgytlfw5ivzh7wlkzz07sj8u7iwnhe6ys63fr.min.js"></script>
+<!--SCRIPTS END-->
+
+
+    
+
+
+
+
+    </body>
+</html>

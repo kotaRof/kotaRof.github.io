@@ -11,7 +11,7 @@
     
     
     
-    <script type="application/ld+json">{"@context":"http://schema.org","@type":"Website","@id":"https://kotaRof.github.io","author":{"@type":"Person","name":"kotaRof","sameAs":["https://github.com/kotaRof","https://www.facebook.com/kotaro.fukuda","mailto:kotarof4@gmail.com"]},"name":"prologue","description":null,"url":"https://kotaRof.github.io"}</script>
+    <script type="application/ld+json">{"@context":"http://schema.org","@type":"Website","@id":"https://kotaRof.github.io","author":{"@type":"Person","name":"kotaRof","sameAs":["https://github.com/kotaRof","mailto:kotarof4@gmail.com"]},"name":"prologue","description":null,"url":"https://kotaRof.github.io"}</script>
     <meta property="og:type" content="blog">
 <meta property="og:title" content="prologue">
 <meta property="og:url" content="https://kotaRof.github.io/index.html">
@@ -131,15 +131,6 @@
             
                 <li class="sidebar-button">
                     
-                        <a  class="sidebar-button-link " href="https://www.facebook.com/kotaro.fukuda" target="_blank" rel="noopener" title="Facebook">
-                    
-                        <i class="sidebar-button-icon fab fa-facebook" aria-hidden="true"></i>
-                        <span class="sidebar-button-desc">Facebook</span>
-                    </a>
-            </li>
-            
-                <li class="sidebar-button">
-                    
                         <a  class="sidebar-button-link " href="mailto:kotarof4@gmail.com" target="_blank" rel="noopener" title="Mail">
                     
                         <i class="sidebar-button-icon fa fa-envelope" aria-hidden="true"></i>
@@ -168,6 +159,95 @@
                     
                         <a
                             class="link-unstyled"
+                            href="/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/"
+                            aria-label=": Extract Decision Path Information from Decision Tree Object of Scikit-learn"
+                        >
+                            Extract Decision Path Information from Decision Tree Object of Scikit-learn
+                        </a>
+                    
+                </h1>
+                <div class="postShorten-meta">
+    <time datetime="2019-07-15T15:09:14+09:00">
+	
+		    Jul 15, 2019
+    	
+    </time>
+    
+        <span>in </span>
+        
+    <a class="category-link" href="/categories/coding/">coding</a>, <a class="category-link" href="/categories/coding/data-science/">data science</a>
+
+
+    
+</div>
+
+            </div>
+            
+                <div class="postShorten-content">
+                    <p><a href="https://qiita.com/kotaRof/items/c478a5ae4c2f70148bf4" target="_blank" rel="noopener">日本語はこちら</a></p>
+<h1 id="Background"><a href="#Background" class="headerlink" title="Background"></a>Background</h1><p>When you carry out the analysis using decision trees from scikit-learn, you would use GraphViz software to visualize their structure.</p>
+<p>However, there exists some problems like…</p>
+<ul>
+<li>Hard to use decision path information as data since its output is .dot text or image</li>
+<li>Sometime annoying to install GraphViz</li>
+</ul>
+<p>In order to overcome above problems, I wrote methods to extract decision path information from decision tree object itself and to print out its structure as text.</p>
+<h1 id="Related-posts"><a href="#Related-posts" class="headerlink" title="Related posts"></a>Related posts</h1><ul>
+<li><a href="https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html" target="_blank" rel="noopener">Understanding the decision tree structure</a><ul>
+<li>Official HP explains how to visualize decision structure as text style. I mainly referred this to understand the details of decision tree object.</li>
+</ul>
+</li>
+<li><a href="https://qiita.com/nekoumei/items/7f2209295515c3aa1053" target="_blank" rel="noopener">Graphviz不要の決定木可視化ライブラリdtreepltをつくった</a><ul>
+<li>Written in Japanese. There exists some trial to visualize its structure as image without using GraphViz.</li>
+</ul>
+</li>
+<li><a href="https://github.com/parrt/dtreeviz" target="_blank" rel="noopener">dtreevis: Decision Tree Visualization</a><ul>
+<li>Using GraphViz, this package tries to upgrade the visualization of decision trees.</li>
+</ul>
+</li>
+</ul>
+<h1 id="Result"><a href="#Result" class="headerlink" title="Result"></a>Result</h1><p>Structural information is kept as arrays in the decision tree object and could be extracted as follows(<a href="https://scikit-learn.org/stable/auto_examples/tree/plot_unveil_tree_structure.html" target="_blank" rel="noopener">reference</a>).</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"># estimator : decision tree object</span><br><span class="line">estimator = DecisionTreeClassifier(max_leaf_nodes=3, random_state=0)</span><br><span class="line">estimator.fit(X_train, y_train)</span><br><span class="line"></span><br><span class="line"># Using those arrays, we can parse the tree structure:</span><br><span class="line">n_nodes = estimator.tree_.node_count # total number of nodes（int）</span><br><span class="line">children_left = estimator.tree_.children_left # child node number at the left side of each node（list）</span><br><span class="line">children_right = estimator.tree_.children_right # child node number at the right side of each node（list）</span><br><span class="line">feature = estimator.tree_.feature # feature column number of each node（list）</span><br><span class="line">threshold = estimator.tree_.threshold # feature threshold of each node（list）</span><br></pre></td></tr></table></figure>
+
+<p>Using these data, you can output its structure as text format.</p>
+<figure class="highlight plain"><figcaption><span>output</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; from sklearn.datasets import load_iris</span><br><span class="line">&gt;&gt;&gt; from sklearn.tree import DecisionTreeClassifier</span><br><span class="line">&gt;&gt;&gt; iris = load_iris()</span><br><span class="line">&gt;&gt;&gt; dtc = DecisionTreeClassifier(max_depth=5,min_samples_leaf=10)</span><br><span class="line">&gt;&gt;&gt; dtc.fit(iris[&apos;data&apos;],iris[&apos;target&apos;])</span><br><span class="line">&gt;&gt;&gt; print(visualizeTreeStructure(dtc,feature_names=iris[&apos;feature_names&apos;]))</span><br><span class="line"># output</span><br><span class="line">The binary tree structure has 11 nodes and has the following tree structure:</span><br><span class="line">node=0 test node: go to node 1 if petal length (cm) &lt;= 2.449999988079071 else to node 2.</span><br><span class="line">	node=1 leaf node.</span><br><span class="line">	node=2 test node: go to node 3 if petal width (cm) &lt;= 1.75 else to node 8.</span><br><span class="line">		node=3 test node: go to node 4 if petal length (cm) &lt;= 4.6499998569488525 else to node 7.</span><br><span class="line">			node=4 test node: go to node 5 if petal length (cm) &lt;= 4.450000047683716 else to node 6.</span><br><span class="line">				node=5 leaf node.</span><br><span class="line">				node=6 leaf node.</span><br><span class="line">			node=7 leaf node.</span><br><span class="line">		node=8 test node: go to node 9 if sepal length (cm) &lt;= 6.25 else to node 10.</span><br><span class="line">			node=9 leaf node.</span><br><span class="line">			node=10 leaf node.</span><br></pre></td></tr></table></figure>
+
+<p>Further trial enables us to create dataframe which exhibits summarized feature threshold information of all nodes.</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">&gt;&gt;&gt; from sklearn.datasets import load_iris</span><br><span class="line">&gt;&gt;&gt; from sklearn.tree import DecisionTreeClassifier</span><br><span class="line">&gt;&gt;&gt; iris = load_iris()</span><br><span class="line">&gt;&gt;&gt; dtc = DecisionTreeClassifier(max_depth=5,min_samples_leaf=10)</span><br><span class="line">&gt;&gt;&gt; dtc.fit(iris[&apos;data&apos;],iris[&apos;target&apos;])</span><br><span class="line">&gt;&gt;&gt; print(extractDecisionInfo(dtc,iris[&apos;data&apos;],feature_names=iris[&apos;feature_names&apos;]))</span><br><span class="line"># output</span><br><span class="line">     sepal length (cm) sepal width (cm)  \</span><br><span class="line">node                                      </span><br><span class="line">0           (nan, nan)       (nan, nan)   </span><br><span class="line">1           (nan, nan)       (nan, nan)   </span><br><span class="line">2           (nan, nan)       (nan, nan)   </span><br><span class="line">3           (nan, nan)       (nan, nan)   </span><br><span class="line">4           (nan, nan)       (nan, nan)   </span><br><span class="line">5           (nan, nan)       (nan, nan)   </span><br><span class="line">6           (nan, nan)       (nan, nan)   </span><br><span class="line">7           (nan, nan)       (nan, nan)   </span><br><span class="line">8           (nan, nan)       (nan, nan)   </span><br><span class="line">9          (nan, 6.25)       (nan, nan)   </span><br><span class="line">10         (6.25, nan)       (nan, nan)   </span><br><span class="line"></span><br><span class="line">                            petal length (cm)           petal width (cm)  \</span><br><span class="line">node                                                                       </span><br><span class="line">0                                  (nan, nan)                 (nan, nan)   </span><br><span class="line">1                                  (nan, nan)   (nan, 0.800000011920929)   </span><br><span class="line">2                                  (nan, nan)   (0.800000011920929, nan)   </span><br><span class="line">3                                  (nan, nan)  (0.800000011920929, 1.75)   </span><br><span class="line">4                   (nan, 4.6499998569488525)  (0.800000011920929, 1.75)   </span><br><span class="line">5                    (nan, 4.450000047683716)  (0.800000011920929, 1.75)   </span><br><span class="line">6     (4.450000047683716, 4.6499998569488525)  (0.800000011920929, 1.75)   </span><br><span class="line">7                   (4.6499998569488525, nan)  (0.800000011920929, 1.75)   </span><br><span class="line">8                                  (nan, nan)                (1.75, nan)   </span><br><span class="line">9                                  (nan, nan)                (1.75, nan)   </span><br><span class="line">10                                 (nan, nan)                (1.75, nan)   </span><br><span class="line"></span><br><span class="line">      predicted_value                 value  impurity  n_node_samples  </span><br><span class="line">node                                                                   </span><br><span class="line">0                 NaN  [[50.0, 50.0, 50.0]]  0.666667             150  </span><br><span class="line">1                 0.0    [[50.0, 0.0, 0.0]]  0.000000              50  </span><br><span class="line">2                 NaN   [[0.0, 50.0, 50.0]]  0.500000             100  </span><br><span class="line">3                 NaN    [[0.0, 49.0, 5.0]]  0.168038              54  </span><br><span class="line">4                 NaN    [[0.0, 39.0, 1.0]]  0.048750              40  </span><br><span class="line">5                 1.0    [[0.0, 29.0, 0.0]]  0.000000              29  </span><br><span class="line">6                 1.0    [[0.0, 10.0, 1.0]]  0.165289              11  </span><br><span class="line">7                 1.0    [[0.0, 10.0, 4.0]]  0.408163              14  </span><br><span class="line">8                 NaN    [[0.0, 1.0, 45.0]]  0.042533              46  </span><br><span class="line">9                 2.0    [[0.0, 1.0, 10.0]]  0.165289              11  </span><br><span class="line">10                2.0    [[0.0, 0.0, 35.0]]  0.000000              35</span><br></pre></td></tr></table></figure>
+
+<p>All the source codes are found in <a href="https://github.com/kotaRof/hackingDecisionTree/blob/master/extractDecisionPathInfo/ipynb/runAll.ipynb" target="_blank" rel="noopener">GitHub</a>.</p>
+
+                    
+                        
+
+
+                    
+                    
+                        <p>
+                            <a
+                                href="/2019/07/15/20190715_ExtractDecisionPathInformationFromDecisionTreeObjectOfScikit-learn/#post-footer"
+                                class="postShorten-excerpt_link link"
+                                aria-label=""
+                            >
+                                Comment and share
+                            </a>
+                        </p>
+                    
+                </div>
+            
+        </div>
+        
+    </article>
+    
+    
+    <article class="postShorten postShorten--thumbnailimg-bottom">
+        <div class="postShorten-wrap">
+            
+            <div class="postShorten-header">
+                <h1 class="postShorten-title">
+                    
+                        <a
+                            class="link-unstyled"
                             href="/2019/07/15/loading/"
                             aria-label=": loading"
                         >
@@ -176,7 +256,7 @@
                     
                 </h1>
                 <div class="postShorten-meta">
-    <time datetime="2019-07-15T13:12:36+09:00">
+    <time datetime="2019-07-15T15:04:39+09:00">
 	
 		    Jul 15, 2019
     	
@@ -193,7 +273,10 @@
             </div>
             
                 <div class="postShorten-content">
-                    <p>I have just started blogging. The page is made by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> with <a href="https://github.com/LouisBarranqueiro/hexo-theme-tranquilpeak" target="_blank" rel="noopener">Tranquilpeak</a> theme.<br>Maybe I will write in English like this post, or maybe in Japanese.<br>I will write something about coding, python, scikit-learn etc., or write something about my private life.<br>See you soon.</p>
+                    <p>I have just started blogging. The page is made by <a href="https://hexo.io/" target="_blank" rel="noopener">Hexo</a> with <a href="https://github.com/LouisBarranqueiro/hexo-theme-tranquilpeak" target="_blank" rel="noopener">Tranquilpeak</a> theme.</p>
+<p>Maybe I will write in English like this post, or maybe in Japanese.</p>
+<p>I will write something about coding, python, scikit-learn etc., or write something about my private life.</p>
+<p>See you soon.</p>
 
                     
                         
